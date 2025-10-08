@@ -1,10 +1,10 @@
 # Cyber-Analytics-I
 
-check_dataset.py Usage:
-  python check_dataset.py -i \{Input File\} -p \{Whatever headers you want to look at\}
-    Optional: "-d" for "disregard" useful if you have a lot of headers, and you want to analyze most of them. Use "-p" to specify the headers you want to disregard, followed by "-d"
-    ex. python check_dataset.py -i \{Input File\} -p \{Whatever headers you want disregard\} -d
-  Input file should be in the following format:
+#check_dataset.py Usage:
+#  python check_dataset.py -i \{Input File\} -p \{Whatever headers you want to look at\}
+#    Optional: "-d" for "disregard" useful if you have a lot of headers, and you want to analyze most of them. Use "-p" to specify the headers you want to disregard, followed by "-d"
+#    ex. python check_dataset.py -i \{Input File\} -p \{Whatever headers you want disregard\} -d
+#  Input file should be in the following format:
     \{key1:value1, key2:value2\}
     \{key1:value3, key2:value4\}
     \{key1:value5, key2:value6\}
