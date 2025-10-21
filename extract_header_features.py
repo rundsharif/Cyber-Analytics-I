@@ -74,13 +74,54 @@ def get_sender_features(msg): # adds 4 fatures
     # Numbers in email address (excluding domain)
     email_local = from_email.split('@')[0] if '@' in from_email else from_email
     features['from_has_numbers'] = bool(re.search(r'\d', email_local))
+    # NEW: Check if display name is missing/empty (suspicious for legitimate senders)
+    # Reasoning: Phishing emails often have bare addresses with no display name
+    features['display_name_empty'] = not bool(display_name and display_name.strip())
     
-
-    features['display_name_mismatch'] = bool(display_name) and (display_name.lower() != from_email.lower())
+    # NEW: Check if display name exactly matches email (redundant, slightly suspicious)
+    # Reasoning: "john@company.com <john@company.com>" is unusual
+    features['display_name_is_email'] = (
+        display_name.lower().strip() == from_email.lower().strip()
+    ) if display_name else False
     
     # Reply-To different from From
     reply_to = parseaddr(safe_header_get(msg, 'Reply-To'))[1]
     features['reply_to_differs'] = bool(reply_to) and (reply_to.lower() != from_email.lower())
+    
+    return features
+
+def get_data_quality_features(msg, all_features): # adds 4 features
+    """
+    Reasoning: Separate "poorly formatted email" from "malicious email" signals.
+    This prevents the model from learning spurious correlations like 
+    "malformed date = phishing" when it might just be "old email system".
+    
+    Call this AFTER all other feature extraction to analyze the extracted features.
+    """
+    features = {}
+    
+    # Invalid/malformed date
+    # Reasoning: day_of_week == -1 indicates parsing failure
+    features['has_valid_date'] = all_features.get('day_of_week', -1) != -1
+    
+    # Extreme content-type complexity (likely malformed header)
+    # Reasoning: Normal emails have 0-3 semicolons; 100+ suggests corruption/attack
+    complexity = all_features.get('content_type_complexity', 0)
+    features['has_extreme_complexity'] = complexity > 10
+    
+    # Unusual timezone (outside normal range)
+    # Reasoning: Valid timezones are -12 to +14 hours (-43200 to +50400 seconds)
+    # Values outside this suggest malformed or spoofed headers
+    tz_offset = all_features.get('timezone_offset', 0)
+    features['has_unusual_timezone'] = abs(tz_offset) > 50400
+    
+    # Overall data quality score (0-3, higher = better quality)
+    # Reasoning: Provides a single metric for "how well-formed is this email"
+    features['data_quality_score'] = sum([
+        features['has_valid_date'],
+        not features['has_extreme_complexity'],
+        not features['has_unusual_timezone']
+    ])
     
     return features
 
@@ -89,13 +130,7 @@ def get_structural_features(msg): # adds 4 features
     
     # Message-ID: RFC 5322 requires this, absence is suspicious
     features['missing_message_id'] = 'Message-ID' not in msg
-    
-    # Received headers count
-    # Reasoning: Legitimate emails have 3-10 Received headers typically
-    # Too few suggests direct injection, too many suggests relay abuse
-    received_headers = msg.get_all('Received', [])
-    features['received_count'] = len(received_headers)
-    
+        
     # X-Mailer: Indicates email client used
     features['has_x_mailer'] = 'X-Mailer' in msg
     
@@ -173,6 +208,52 @@ def get_encoding_features(msg): #adds 4 features
     return features
 
 
+def get_received_path_features(msg): # adds 4 features
+    """
+    Reasoning: The simple received_count is good, but analyzing the path
+    characteristics provides additional signal. Multiple unique IPs suggest
+    legitimate routing; zero or single IP suggests direct injection or spoofing.
+    """
+    features = {}
+    
+    received_headers = msg.get_all('Received', [])
+    features['received_count'] = len(received_headers)  # Keep the original
+    
+    # Extract IPs from Received headers
+    # Reasoning: Each legitimate relay adds its IP; we count unique IPs
+    ip_pattern = r'\[?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\]?'
+    all_ips = []
+    
+    for header in received_headers:
+        # Convert to string in case it's a Header object
+        header_str = str(header)
+        ips = re.findall(ip_pattern, header_str)
+        all_ips.extend(ips)
+    
+    unique_ips = set(all_ips)
+    features['unique_relay_ips'] = len(unique_ips)
+    
+    # Check if all received headers have localhost/private IPs
+    # Reasoning: 127.0.0.1, 10.x.x.x, 192.168.x.x suggest internal/test systems
+    private_ip_pattern = r'^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)'
+    
+    if all_ips:
+        private_count = sum(
+            1 for ip in all_ips if re.match(private_ip_pattern, ip)
+        )
+        features['all_private_ips'] = (private_count == len(all_ips))
+    else:
+        features['all_private_ips'] = False
+    
+    # Ratio of unique IPs to total received headers
+    # Reasoning: Duplicate IPs across hops is unusual; might indicate spoofing
+    if received_headers:
+        features['ip_diversity_ratio'] = len(unique_ips) / len(received_headers)
+    else:
+        features['ip_diversity_ratio'] = 0.0
+    
+    return features
+
 def get_all_features(raw_heads_string, og_fname):
 
     try:
@@ -184,6 +265,9 @@ def get_all_features(raw_heads_string, og_fname):
         features.update(get_structural_features(msg))
         features.update(get_temporal_features(msg))
         features.update(get_encoding_features(msg))
+        features.update(get_received_path_features(msg))
+
+        features.update(get_data_quality_features(msg, features))  # 4 features (NEW)
 
         return features
 
@@ -209,7 +293,7 @@ if __name__ == "__main__":
     outfile = args.output
     debug = args.debug
     if not outfile:
-        outfile = change_filename(infile, "csv", "features")
+        outfile = change_filename(infile, "json", "features")
     elif os.path.exists(outfile):
         if input(f"please enter anything if you want to first delete the existing output file {outfile}: \n"):
             os.remove(outfile)
