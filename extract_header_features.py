@@ -287,6 +287,17 @@ def process_jlines(input, output):
             wf.write(ujson.dumps(features,ensure_ascii=False) + "\n")
 
 
+def header_wrapper(infile, outfile = "", debug = False):
+    if not outfile:
+        outfile = change_filename(infile, "json", "features")
+    elif os.path.exists(outfile):
+        if input(f"please enter anything if you want to first delete the existing output file {outfile}: \n"):
+            os.remove(outfile)
+    
+    process_jlines(infile, outfile)
+
+    return outfile
+
 if __name__ == "__main__":
     args = parser.parse_args()
     infile = args.input

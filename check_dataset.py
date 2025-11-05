@@ -39,8 +39,11 @@ def get_counter(fname, headers, disregard = False):
         for i, line in enumerate(f, 1):
             temp_d = ujson.loads(line)
             for h in headers:
-                if h in temp_d.keys():
-                    out_d[h][temp_d[h]] += 1
+                v = temp_d[h]
+                if isinstance(v, list):
+                    out_d[h][f"list_length_{len(v)}"] += 1
+                elif h in temp_d.keys():
+                    out_d[h][v] += 1
             line_count = i
         #print(f"Final Value Counts per Header: \n{out_d}")
         for k in out_d:

@@ -14,3 +14,12 @@ def get_sample(big_list, samp_size):
     small_list = big_list[sample_start:sample_start + samp_size]
 
     return small_list
+
+def get_all_files_from_dir(dirname):
+    all_fnames = []
+    for root, _, files in os.walk(dirname):
+        for file in files:
+            full_path = os.path.abspath(os.path.join(root, file))
+            if os.path.isfile(full_path):
+                all_fnames.append(full_path)
+    return all_fnames
