@@ -16,8 +16,10 @@ parser.add_argument("--sample", "-s", help="use a sample of files instead of all
 
 def fully_process(infile, outfile, debug, sample):
     parsed_fname = parsing_wrapper(infile, outfile, debug, sample)
-    body_features_fname, url_fname = body_wrapper(parsed_fname, change_filename(parsed_fname, "body_features", "json"), debug)
-    header_features_fname = header_wrapper(parsed_fname, change_filename(parsed_fname, "header_features", "json"), debug)
+    print("\n\n\t Initial Parsing completed. Begninning Body Feature + URL extraction\n")
+    body_features_fname, url_fname = body_wrapper(parsed_fname, change_filename(parsed_fname, "json", "body_features"), debug)
+    print("\n\n\t Body Feature + URL extraction completed. Beginning Header feature extraction\n")
+    header_features_fname = header_wrapper(parsed_fname, change_filename(parsed_fname, "json", "header_features"), debug)
 
     print(f"Parsed Filename: {os.path.basename(parsed_fname)}")
     print(f"Body Features Filename: {os.path.basename(body_features_fname)}")
