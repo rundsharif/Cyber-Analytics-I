@@ -5,7 +5,7 @@ import ujson
 import re
 import os
 from bs4 import BeautifulSoup
-from io_helpers import get_sample, get_all_files_from_dir
+from io_helpers import get_sample, get_all_files_from_dir, change_filename
 import time
 import mimetypes
 import hashlib
@@ -255,7 +255,7 @@ def get_flist_abspath(flist):
 
 def parsing_wrapper(infile, outfile = "", debug = False, sample = False):
     if not outfile:
-        outfile = "default_out.json"
+        outfile = change_filename(infile, "json", "parsed")
     elif os.path.exists(outfile):
         if input(f"please enter anything if you want to first delete the existing output file {outfile}: \n"):
             os.remove(outfile)
