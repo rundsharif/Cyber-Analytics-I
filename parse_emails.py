@@ -54,11 +54,18 @@ def extract_attachments(msg):
             # Inline can be images embedded in HTML - often need analysis too
             
             # Get filename
-            filename = part.get_filename()
+            filename = part.get_filename() or part.get_param("name", header="content-type")
+            if not filename:
+                # Last resort: check for any name-like parameter
+                for param_name in ["filename", "name"]:
+                    filename = part.get_param(param_name)
+                    if filename:
+                        break
             if not filename:
                 # Some attachments don't have filenames, generate one
                 ext = mimetypes.guess_extension(part.get_content_type())
                 filename = f"unnamed_attachment{ext or '.bin'}"
+            filename = re.sub(r"[/\\:*?\"<>|]", "_", filename)
             
             # Get the binary data
             try:
