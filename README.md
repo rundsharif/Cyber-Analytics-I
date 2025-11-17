@@ -13,20 +13,9 @@
 
 ###  No output file is created by this script, it is only for sanity checking a json lines file
 
-## separate_headers_body.py Usage:
-
-###  python separate_headers_body.py -i {Input File(s) or Directory} -o {Output file name}
-    -i accepts a file, multiple files, or a directory. If a directory, it finds all .eml files in that directory that are one level deep (doesnt dig into all directories inside).
-    -o is optional, otherwise saves output to a default output filename
-
-###  Output file is in the following format:
-    {header_list:"header1,header2,header3", raw_headers:(raw headers in UTF-8 format), body: (body text in UTF-8 format)}
-    {header_list:"header1,header2,header3", raw_headers:(raw headers in UTF-8 format), body: (body text in UTF-8 format)}
-    {header_list:"header1,header2,header3", raw_headers:(raw headers in UTF-8 format), body: (body text in UTF-8 format)}
-    ...
 ## parse_emls.py Usage:
 
-###  python parse_emls.py -i {Input File(s) or Directory} -o {Output file name} 
+###  python parse_emls.py -i {Input File(s) or Directory} -o {Output file name} (Following flags are optional) -s {number} -l {label}
     -i accepts a file, multiple files, or a directory. If a directory, it finds all .eml files in that directory that are one level deep (doesnt dig into all directories inside).
     -o is optional, otherwise saves output to a default output filename
     -s is optional, used for getting a sample rather than all files. For example, if you give it a directory as "input file" that has 50k emails, but you just want 5k, you use '-s 5000'
