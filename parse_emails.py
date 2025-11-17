@@ -17,6 +17,7 @@ parser.add_argument("--input", "-i", nargs="+", help="The name of the file to fi
 parser.add_argument("--output", "-o", help="The name of the file to output to", required=False)
 parser.add_argument("--debug", "-d", help="debug mode", action="store_true", required=False)
 parser.add_argument("--sample", "-s", help="use a sample of files instead of all files from dir, specify number of samples desired", required=False)
+parser.add_argument("--label", "-l", help="a static key/value pair that you want to add to each line. useful for labeling", required=False)
 
 
 
@@ -30,6 +31,7 @@ parse_emailsy.py Usage:
 python parse_emails.py -i {Input File(s) or Directory} -o {Output file name}
     -i accepts a file, multiple files, or a directory. If a directory, it finds all .eml files in that directory that are one level deep (doesnt dig into all directories inside).
     -o is optional, otherwise saves output to a default output filename
+    -l is optional, allows you to add a label to each line as it processes
 Output file is in the following format:
     {header_list:"header1,header2,header3", raw_headers:(raw headers in UTF-8 format), body: (body text in UTF-8 format)}
     {header_list:"header1,header2,header3", raw_headers:(raw headers in UTF-8 format), body: (body text in UTF-8 format)}
@@ -302,6 +304,7 @@ if __name__ == '__main__':
     outfile = args.output
     debug = args.debug
     sample = args.sample
+    label = args.label
     if not outfile:
         outfile = "default_out.json"
     elif os.path.exists(outfile):
@@ -321,6 +324,9 @@ if __name__ == '__main__':
     for i, name in enumerate(infile):
         try:
             out_dict = parse_eml(name)
+            if label:
+                out_dict["label"] = label
+
         except Exception as e:
             print(f"Error processing {os.path.basename(name)}: {e}")
             raise e
