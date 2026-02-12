@@ -1,14 +1,14 @@
 # Table of Contents 
-* [CLI Tools](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#cli-tools)
-  * [parse_emails.py](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#parse_emailspy-usage)
-  * [extract_header_features.py](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#extract_header_featurespy-usage)
-  * [extract_body_features.py](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#extract_body_featurespy-usage)
-  * [rebuild_attachments.py](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#rebuild_attachmentspy-usage)
-  * [wrapper_for_parsing.py](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#wrapper_for_parsingpy-usage)
-  * [check_dataset.py](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#check_datasetpy-usage)
-  * [jlines_to_csv.py](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#jlines_to_csvpy-usage)
-* [Non-CLI Tools](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#non-cli-tools)
-  * [io_helpers.py](https://github.com/rundsharif/Cyber-Analytics-I/edit/main/README.md#io_helperspy-usage)
+* [CLI Tools](#cli-tools)
+  * [parse_emails.py](#parse_emailspy-usage)
+  * [extract_header_features.py](#extract_header_featurespy-usage)
+  * [extract_body_features.py](#extract_body_featurespy-usage)
+  * [rebuild_attachments.py](#rebuild_attachmentspy-usage)
+  * [wrapper_for_parsing.py](#wrapper_for_parsingpy-usage)
+  * [check_dataset.py](#check_datasetpy-usage)
+  * [jlines_to_csv.py](#jlines_to_csvpy-usage)
+* [Non-CLI Tools](#non-cli-tools)
+  * [io_helpers.py](#io_helperspy-usage)
 
 # CLI Tools
 ## parse_emails.py Usage:
