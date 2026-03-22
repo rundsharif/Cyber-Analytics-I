@@ -1,0 +1,32 @@
+Return-Path: <sender@example.com>
+Received: from mail-yw1-f45.google.com (mail-yw1-f45.google.com [209.85.128.45])
+        by mx.example.net with ESMTPS id abc123
+        for <you@example.com>;
+        Tue, 18 Feb 2025 09:15:22 -0600 (CST)
+Received: by mail-yw1-f45.google.com with SMTP id a12so1234567ywa.3
+        for <you@example.com>; Tue, 18 Feb 2025 07:15:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=example.com; s=google;
+        bh=AbCdEfGh1234567890=;
+        b=ExampleSignatureValue123456789;
+Authentication-Results: mx.google.com;
+        dkim=pass header.i=@example.com;
+        spf=pass (google.com: domain of sender@example.com designates 209.85.128.45 as permitted sender)
+        smtp.mailfrom=sender@example.com;
+From: "Example Sender" <sender@example.com>
+Reply-To: sender@example.com
+To: you@example.com
+Subject: Weekly Status Report – Feb 2025
+Message-ID: <CAFz4q12345@mail.example.com>
+Date: Tue, 18 Feb 2025 09:15:19 -0600
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+This is a test email used for validating the header-origin model,
+feature extraction, and geo-enrichment pipeline.
+
+Best,
+Example Sender

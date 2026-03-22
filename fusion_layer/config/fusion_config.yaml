@@ -1,0 +1,22 @@
+fusion:
+  primary_method: logistic_regression_stacking
+  baseline_method: soft_voting
+
+thresholds:
+  final_label: 0.50
+  low_risk_max: 0.30
+  medium_risk_max: 0.70
+
+preprocessing:
+  missing_probability_imputation: 0.50
+  require_at_least_one_modality: true
+
+artifacts:
+  model_path: artifacts/logistic_fusion_model.joblib
+  metadata_path: artifacts/logistic_fusion_metadata.json
+
+logistic_regression:
+  C: 1.0
+  solver: liblinear
+  max_iter: 1000
+  random_state: 42

@@ -1,0 +1,25 @@
+{
+  "coefficients": {
+    "has_body": -0.260681977916206,
+    "has_header": -0.260681977916206,
+    "has_malware": 0.42596808938114994,
+    "models_present_count": -0.09539586645126184,
+    "p_body_filled": 0.6923285879253187,
+    "p_header_filled": 0.880530174651241,
+    "p_malware_filled": 0.37647799568485724
+  },
+  "feature_columns": [
+    "p_header_filled",
+    "p_body_filled",
+    "p_malware_filled",
+    "has_header",
+    "has_body",
+    "has_malware",
+    "models_present_count"
+  ],
+  "imputation_value": 0.5,
+  "intercept": -0.260681977916206,
+  "model_type": "logistic_regression_stacking",
+  "threat_threshold": 0.5,
+  "training_rows": 10
+}
