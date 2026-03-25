@@ -324,7 +324,7 @@ def get_body_features(parsed_emls):
         }, []
 
     try:
-        features = {}
+        features = {"email_id":parsed_emls["email_id"]}
         features.update(get_urgency_features(raw_body))
         features.update(get_authority_features(raw_body))
         features.update(get_threat_features(raw_body))
@@ -342,6 +342,3 @@ def get_body_features(parsed_emls):
     except Exception as e:
         print(f"failed data from original file: {og_fname}")
         raise e
-    
-
-features, urls = get_body_features(parsed_eml)

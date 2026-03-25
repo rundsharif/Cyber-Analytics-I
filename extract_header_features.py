@@ -254,12 +254,13 @@ def get_received_path_features(msg): # adds 4 features
     
     return features
 
-def get_all_features(raw_heads_string, og_fname):
-
+def get_all_features(parsed_eml):
+    raw_heads_string = parsed_eml.get('raw_headers', '')
+    og_fname = parsed_eml.get('og_fname', '')
     try:
         msg = message_from_string(raw_heads_string)
 
-        features = {}
+        features = {"email_id":parsed_eml["email_id"]}
         features.update(get_authenticity_features(msg))
         features.update(get_sender_features(msg))
         features.update(get_structural_features(msg))
@@ -282,7 +283,7 @@ def process_jlines(input, output):
 
         for i, line in enumerate(f, 1):
             in_dict = ujson.loads(line)
-            features = get_all_features(in_dict.get('raw_headers', ''), in_dict.get('og_fname', ''))
+            features = get_all_features(in_dict)
 
             wf.write(ujson.dumps(features,ensure_ascii=False) + "\n")
 

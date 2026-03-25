@@ -1,7 +1,7 @@
 
 import argparse
 import os
-import ujson
+import json as ujson
 from email import message_from_string
 from io_helpers import change_filename
 from email.utils import parseaddr, parsedate_tz, getaddresses
