@@ -56,8 +56,21 @@ def load_inference_dataframe(path: str | Path) -> pd.DataFrame:
     """Load and validate an unlabeled fusion-inference CSV."""
 
     dataframe = _read_csv(path, INFERENCE_INPUT_COLUMNS)
-    dataframe = _coerce_numeric_columns(dataframe, ["p_header", "p_body", "p_malware"])
-    return validate_inference_dataframe(dataframe)
+    return load_inference_dataframe_from_dataframe(dataframe)
+
+
+def load_inference_dataframe_from_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """Validate an in-memory inference dataframe against the fusion contract.
+
+    This helper supports cloud/runtime workflows (for example Lambda + S3)
+    where inference rows may already be loaded into a dataframe.
+    """
+
+    normalized = dataframe.copy()
+    normalized.columns = [str(column).strip() for column in normalized.columns]
+    validate_contract_columns(normalized, INFERENCE_INPUT_COLUMNS, "inference dataframe")
+    normalized = _coerce_numeric_columns(normalized, ["p_header", "p_body", "p_malware"])
+    return validate_inference_dataframe(normalized)
 
 
 def write_output_dataframe(dataframe: pd.DataFrame, path: str | Path) -> Path:

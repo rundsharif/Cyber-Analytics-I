@@ -8,6 +8,8 @@ This project implements a **standalone late-fusion layer** for a multi-model cyb
 
 The fusion layer is designed for **Phase 1** requirements where the team must use **late fusion**, not end-to-end neural fusion. The primary fusion method is **logistic regression stacking**, and the baseline method is **soft voting**.
 
+Detailed fusion-model documentation is available in `MODEL_DOCUMENTATION.md`.
+
 ---
 
 ## Why this fusion layer exists
@@ -150,6 +152,8 @@ fusion_layer/
 │   ├── __init__.py
 │   ├── contracts.py
 │   ├── loaders.py
+│   ├── s3_io.py
+│   ├── lambda_handler.py
 │   ├── validators.py
 │   ├── preprocess.py
 │   ├── soft_voting.py
@@ -165,7 +169,9 @@ fusion_layer/
 │   ├── test_preprocess.py
 │   ├── test_soft_voting.py
 │   ├── test_logistic_fusion.py
-│   └── test_risk_mapping.py
+│   ├── test_risk_mapping.py
+│   ├── test_s3_io.py
+│   └── test_lambda_handler.py
 └── artifacts/
     └── .gitkeep
 ```
@@ -222,6 +228,121 @@ If `--model-artifact` is omitted, the CLI uses the configured default artifact p
 ```bash
 python3 run_inference.py   --input data/sample_fusion_inference.csv   --fusion-method soft_voting   --output artifacts/soft_voting_predictions.csv
 ```
+
+---
+
+## Lambda + S3 runtime integration
+
+The fusion layer now includes a cloud runtime handler for **S3-driven inference**:
+
+- `src/lambda_handler.py`
+- `src/s3_io.py`
+
+This supports the deployment model you described (Lambda functions + S3).
+
+### Supported invocation patterns
+
+1. **Direct payload invocation** (recommended for orchestration flows)
+
+```json
+{
+  "input_s3_uri": "s3://your-bucket/fusion-input/inference.csv",
+  "output_s3_uri": "s3://your-bucket/fusion-output/predictions.csv",
+  "fusion_method": "logistic_regression_stacking",
+  "model_artifact_uri": "s3://your-bucket/artifacts/logistic_fusion_model.joblib",
+  "config_s3_uri": "s3://your-bucket/config/fusion_config.yaml"
+}
+```
+
+2. **Native S3 event invocation**
+
+- The handler reads `bucket/key` from `event.Records[0].s3`
+- Output URI is auto-derived unless explicitly provided
+
+### Environment variables (optional)
+
+- `FUSION_METHOD`
+- `FUSION_MODEL_URI` (or `FUSION_MODEL_S3_URI`)
+- `FUSION_CONFIG_S3_URI`
+- `FUSION_OUTPUT_BUCKET`
+- `FUSION_OUTPUT_PREFIX`
+
+### IAM permissions needed by fusion Lambda
+
+At minimum, the execution role needs:
+
+- `s3:GetObject` on fusion input objects
+- `s3:GetObject` on model artifact/config objects (if stored in S3)
+- `s3:PutObject` on fusion output prefix
+
+### Lambda handler flow
+
+1. Resolve config and fusion method
+2. Resolve input S3 URI (direct payload or S3 event)
+3. Load input CSV from S3
+4. Validate contract and modality rules
+5. Run selected fusion method
+6. Write output CSV to S3
+7. Return rows scored, output URI, and method used
+
+---
+
+## Localhost S3 Testing Web App
+
+To make S3-connected testing easier during integration, this project now includes a local web console:
+
+- backend: `src/web_app.py`
+- launcher: `run_web_app.py`
+- UI template: `web/templates/index.html`
+- UI assets: `web/static/styles.css`, `web/static/app.js`
+
+### What the web app does
+
+- accepts S3 input URI and fusion options
+- supports local input CSVs from your device for branch-model outputs
+- pulls inference input CSV from S3
+- can select the **latest CSV under an S3 prefix** (live-email style workflow)
+- runs soft voting or logistic stacking
+- optionally writes prediction CSV back to S3
+- optionally writes prediction CSV locally
+- displays a browser preview of prediction rows
+
+### Run locally
+
+```bash
+cd /Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer
+python3 -m pip install -r requirements.txt
+python3 run_web_app.py
+```
+
+Open in browser:
+
+`http://127.0.0.1:5050`
+
+### API endpoints
+
+- `GET /` – web UI
+- `GET /api/health` – health check
+- `POST /api/run-s3-fusion` – run S3-backed fusion inference
+
+### Notes
+
+- The app uses your local AWS credentials/profile chain for S3 access.
+- For `logistic_regression_stacking`, provide `model_artifact_uri` when needed.
+- If `output_s3_uri` is omitted, one is auto-derived from input URI + method.
+- For fully local testing, set `input_source=local`, provide `local_input_path`, and disable S3 writes.
+
+### Live-email friendly S3 mode
+
+If upstream Lambda parsing is continuously dropping new fusion-input CSVs into S3, you can run near-real-time checks by:
+
+1. Set **Input Source** = `s3`
+2. Enable **use latest CSV from prefix**
+3. Fill `source_bucket` + `source_prefix` (example: `parsed/fusion-input/`)
+4. (Optional) set `last_seen_key` so the app returns `no_new_data=true` when no new object has arrived
+5. (Optional) enable **Auto-poll latest S3 prefix** and set polling interval (seconds)
+
+This matches your live pipeline where S3/Lambda feed parsed outputs and fusion consumes the newest batch.
 
 ---
 
@@ -285,6 +406,9 @@ The tests cover:
 - soft voting outputs
 - logistic fusion train/save/load/infer flow
 - risk-level boundary behavior
+- S3 URI and CSV utility behavior
+- Lambda runtime S3 flow
+- localhost web app API flow
 
 ---
 
@@ -304,6 +428,36 @@ This will:
 - run soft-voting inference
 
 See `TEAM_DEMO.md` for a walkthrough, current sample outputs, and suggested talking points.
+
+---
+
+## Architecture diagram (full system)
+
+```mermaid
+flowchart TD
+    A[Gmail / Email Source] --> B[Ingestion Pipeline]
+    B --> C[S3 Raw]
+    C --> D[Preprocess / Parse]
+    D --> E[S3 Processed Dataset]
+
+    E --> H[Header Lambda/Model]
+    E --> I[Body Lambda/Model]
+    E --> J[Malware Lambda/Model]
+
+    H --> H1[S3 p_header output]
+    I --> I1[S3 p_body output]
+    J --> J1[S3 p_malware output]
+
+    H1 --> K[Fusion Input Builder]
+    I1 --> K
+    J1 --> K
+
+    K --> L[S3 Fusion Input\nemail_id,p_header,p_body,p_malware]
+    L --> M[Fusion Lambda\nlogistic stacking + soft voting]
+
+    M --> N[S3 Fusion Output\nfinal_score, final_label, risk_level, models_used, fusion_method]
+    N --> O[Dashboard / API / SOC]
+```
 
 ---
 
@@ -328,7 +482,7 @@ That separation keeps responsibilities clear:
 
 ## Notes
 
-- No AWS code is included here.
+- AWS runtime integration is included through `src/lambda_handler.py` and `src/s3_io.py`.
 - No upstream base-model training is implemented here.
 - No embedding fusion, transformer fusion, or end-to-end neural fusion is used.
 - The design is intentionally modular, readable, and student-team friendly.

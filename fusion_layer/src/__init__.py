@@ -3,10 +3,13 @@
 __all__ = [
     "contracts",
     "inference",
+    "lambda_handler",
     "loaders",
     "logistic_fusion",
+    "web_app",
     "preprocess",
     "risk_mapping",
+    "s3_io",
     "soft_voting",
     "training",
     "utils",

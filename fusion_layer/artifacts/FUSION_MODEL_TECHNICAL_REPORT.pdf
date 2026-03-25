@@ -1,0 +1,545 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R 10 0 R 12 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 2544 >>
+stream
+BT
+/F1 11 Tf
+54 728 Td
+(FUSION LAYER TECHNICAL REPORT) Tj
+0 -14 Td
+(=============================) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. Executive Summary) Tj
+0 -14 Td
+(--------------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This report documents the current architecture and implementation status of the fusion layer) Tj
+0 -14 Td
+(for the Cyber Analytics multi-model email threat system. The fusion layer is the terminal) Tj
+0 -14 Td
+(decision component that combines model probabilities from the header, body, and malware) Tj
+0 -14 Td
+(branches into one final threat score and classification output. The implementation is) Tj
+0 -14 Td
+(intentionally late-fusion and production-oriented for Phase 1, emphasizing modularity,) Tj
+0 -14 Td
+(explainability, robust handling of partial modality availability, and operational) Tj
+0 -14 Td
+(compatibility with cloud event-driven workflows.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The fusion layer currently supports two fusion strategies: logistic regression stacking) Tj
+0 -14 Td
+(\(primary\) and soft voting \(baseline\). It enforces strict input and output contracts,) Tj
+0 -14 Td
+(validates data quality, handles missing malware probabilities for emails without) Tj
+0 -14 Td
+(attachments, maps final scores to project-defined risk levels, and returns an explainable) Tj
+0 -14 Td
+(output record that includes both the fusion method and the set of modalities used.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(2. System Context and Scope) Tj
+0 -14 Td
+(---------------------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The broader platform architecture is organized as a staged pipeline:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. Email ingestion \(Gmail/API\)) Tj
+0 -14 Td
+(2. Raw object storage in S3) Tj
+0 -14 Td
+(3. Parsing and preprocessing) Tj
+0 -14 Td
+(4. Specialized branch models \(header, body, malware\)) Tj
+0 -14 Td
+(5. Fusion layer scoring) Tj
+0 -14 Td
+(6. Final SOC-facing output \(dashboard/API/alert path\)) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This report focuses specifically on stage 5. Upstream ingestion, parsing, and branch-model) Tj
+0 -14 Td
+(training are out of scope for this module and are owned by adjacent contributors. The fusion) Tj
+0 -14 Td
+(layer is intentionally decoupled so that upstream model updates do not require redesign of) Tj
+0 -14 Td
+(the downstream decision component.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(3. Architectural Design) Tj
+0 -14 Td
+(-----------------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(3.1 Late Fusion Design Choice) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 2303 >>
+stream
+BT
+/F1 11 Tf
+54 728 Td
+(The architecture uses late fusion rather than end-to-end neural fusion for Phase 1. This) Tj
+0 -14 Td
+(choice was made for practical and operational reasons:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- lower integration complexity across heterogeneous modalities) Tj
+0 -14 Td
+(- easier debugging and failure isolation) Tj
+0 -14 Td
+(- clear interpretability and explainability) Tj
+0 -14 Td
+(- clean support for missing branch outputs) Tj
+0 -14 Td
+(- faster implementation and validation under project timeline constraints) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(3.2 Component Breakdown) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The fusion module is organized into explicitly separated concerns:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `contracts.py`: strict row-level schema contracts) Tj
+0 -14 Td
+(- `validators.py`: dataframe-level quality and rule enforcement) Tj
+0 -14 Td
+(- `preprocess.py`: modality-availability annotation and feature derivation) Tj
+0 -14 Td
+(- `soft_voting.py`: baseline fusion engine) Tj
+0 -14 Td
+(- `logistic_fusion.py`: trained stacking fusion engine) Tj
+0 -14 Td
+(- `risk_mapping.py`: score-to-risk conversion logic) Tj
+0 -14 Td
+(- `loaders.py`: local CSV loading/writing and in-memory dataframe validation) Tj
+0 -14 Td
+(- `s3_io.py`: cloud I/O helpers for S3 URIs and object read/write) Tj
+0 -14 Td
+(- `lambda_handler.py`: event-driven Lambda runtime entrypoint) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This decomposition enables unit-level testing, explainable behavior, and maintainable) Tj
+0 -14 Td
+(ownership boundaries.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4. Data Contracts and Decision Output) Tj
+0 -14 Td
+(-------------------------------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.1 Inference Input Contract) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Per-email inference records must follow:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(`email_id, p_header, p_body, p_malware`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Where each probability is in `[0,1]` when present, and at least one modality must exist.) Tj
+0 -14 Td
+(`p_malware` can be null when an email has no attachment.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.2 Training Input Contract) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Training records add a binary label:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(`email_id, p_header, p_body, p_malware, true_label`) Tj
+0 -14 Td
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 2079 >>
+stream
+BT
+/F1 11 Tf
+54 728 Td
+() Tj
+0 -14 Td
+(4.3 Output Contract) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Fusion outputs follow:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(`email_id, final_score, final_label, risk_level, models_used, fusion_method`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Where:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `final_score`: fused probability in `[0,1]`) Tj
+0 -14 Td
+(- `final_label`: binary classification using configured threshold) Tj
+0 -14 Td
+(- `risk_level`: mapped category based on score band) Tj
+0 -14 Td
+(- `models_used`: present modalities \(`header|body|malware`, etc.\)) Tj
+0 -14 Td
+(- `fusion_method`: `soft_voting` or `logistic_regression_stacking`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(5. Fusion Methods) Tj
+0 -14 Td
+(-----------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(5.1 Soft Voting \(Baseline\)) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Soft voting computes the arithmetic mean of available modality probabilities only. Missing) Tj
+0 -14 Td
+(values are ignored and do not contribute synthetic values to the average.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(5.2 Logistic Regression Stacking \(Primary\)) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The stacking model is trained on:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- filled probabilities: `p_header_filled`, `p_body_filled`, `p_malware_filled`) Tj
+0 -14 Td
+(- presence flags: `has_header`, `has_body`, `has_malware`) Tj
+0 -14 Td
+(- modality count: `models_present_count`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This feature design preserves modality-availability information while keeping inference) Tj
+0 -14 Td
+(stable when values are missing.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(6. Missing-Modality Strategy) Tj
+0 -14 Td
+(----------------------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The model is explicitly designed not to fail when one branch is absent.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Soft voting: excludes missing modalities from mean calculation.) Tj
+0 -14 Td
+(- Logistic stacking: fills missing probabilities with neutral imputation \(`0.50` default\)) Tj
+0 -14 Td
+(  while preserving true absence via binary indicators.) Tj
+0 -14 Td
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 11 0 R >>
+endobj
+11 0 obj
+<< /Length 1994 >>
+stream
+BT
+/F1 11 Tf
+54 728 Td
+() Tj
+0 -14 Td
+(This ensures robust handling of common operational cases such as missing malware scores for) Tj
+0 -14 Td
+(non-attachment emails.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(7. Risk Mapping and Explainability) Tj
+0 -14 Td
+(----------------------------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Final score bands are mapped as follows:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `0.00 <= score < 0.30`: low / benign) Tj
+0 -14 Td
+(- `0.30 <= score < 0.70`: medium / suspicious) Tj
+0 -14 Td
+(- `0.70 <= score <= 1.00`: high / malicious) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Explainability is supported through:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- explicit contract validation errors) Tj
+0 -14 Td
+(- interpretable logistic coefficients saved in metadata) Tj
+0 -14 Td
+(- transparent modality trace via `models_used`) Tj
+0 -14 Td
+(- explicit fusion method labeling on each output row) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(8. Lambda + S3 Runtime Integration) Tj
+0 -14 Td
+(----------------------------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The cloud runtime is now implemented using `lambda_handler.py` and `s3_io.py`.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The Lambda handler supports:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. direct invocation payloads with explicit `input_s3_uri`) Tj
+0 -14 Td
+(2. native S3 event payloads \(`Records[0].s3`\)) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Runtime sequence:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. resolve config and fusion method) Tj
+0 -14 Td
+(2. resolve input object URI) Tj
+0 -14 Td
+(3. load inference CSV from S3) Tj
+0 -14 Td
+(4. validate and normalize input) Tj
+0 -14 Td
+(5. execute selected fusion method) Tj
+0 -14 Td
+(6. write prediction CSV to S3) Tj
+0 -14 Td
+(7. return execution metadata \(`rows_scored`, output URI, method\)) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Required IAM access includes S3 read on input/config/artifact locations and S3 write on) Tj
+0 -14 Td
+(output prefix.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(9. Verification Status) Tj
+0 -14 Td
+(----------------------) Tj
+0 -14 Td
+ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 13 0 R >>
+endobj
+13 0 obj
+<< /Length 2010 >>
+stream
+BT
+/F1 11 Tf
+54 728 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Current automated validation status: **21 tests passing**.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Coverage includes:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- contracts and validators) Tj
+0 -14 Td
+(- preprocessing and missing-modality behavior) Tj
+0 -14 Td
+(- soft voting and logistic fusion behavior) Tj
+0 -14 Td
+(- model save/load and metadata integrity) Tj
+0 -14 Td
+(- risk mapping boundaries) Tj
+0 -14 Td
+(- S3 utility parsing/read/write behavior) Tj
+0 -14 Td
+(- Lambda handler S3-event and payload flow) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(This indicates the fusion module is ready for upstream integration and cloud deployment) Tj
+0 -14 Td
+(wiring.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(10. Current Readiness and Next Steps) Tj
+0 -14 Td
+(------------------------------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The fusion layer is technically complete for Phase 1 objectives and operationally ready to) Tj
+0 -14 Td
+(ingest real branch-model outputs. Remaining effort is primarily integration and) Tj
+0 -14 Td
+(orchestration:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. connect real branch probability outputs into fusion input records) Tj
+0 -14 Td
+(2. enable production trigger chain \(S3 event, EventBridge, or Step Functions\)) Tj
+0 -14 Td
+(3. validate full end-to-end behavior on real project data) Tj
+0 -14 Td
+(4. define downstream alerting and dashboard consumption path) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(11. Conclusion) Tj
+0 -14 Td
+(--------------) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The implemented fusion layer provides a robust, explainable, and cloud-compatible decision) Tj
+0 -14 Td
+(stage for the multi-model cyber-threat pipeline. It satisfies the required late-fusion) Tj
+0 -14 Td
+(methodology, supports missing modalities, and produces SOC-friendly output artifacts. With) Tj
+0 -14 Td
+(Lambda + S3 runtime support now in place, the module is positioned for direct integration) Tj
+0 -14 Td
+(with upstream branch model outputs and final platform orchestration.) Tj
+0 -14 Td
+ET
+endstream
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000141 00000 n 
+0000000211 00000 n 
+0000000337 00000 n 
+0000002933 00000 n 
+0000003059 00000 n 
+0000005414 00000 n 
+0000005540 00000 n 
+0000007671 00000 n 
+0000007799 00000 n 
+0000009846 00000 n 
+0000009974 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+12037
+%%EOF
