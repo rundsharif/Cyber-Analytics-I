@@ -7,6 +7,7 @@
   * [wrapper_for_parsing.py](#wrapper_for_parsingpy-usage)
   * [check_dataset.py](#check_datasetpy-usage)
   * [jlines_to_csv.py](#jlines_to_csvpy-usage)
+  * [s3_puller_daemon.py](#s3_puller_daemonpy-usage)
 * [Non-CLI Tools](#non-cli-tools)
   * [io_helpers.py](#io_helperspy-usage)
 
@@ -263,4 +264,48 @@ Recursively collects absolute paths of all files in a directory and its subdirec
 
 #### Parameters for get_all_files_from_dir:
     dirname: Directory path to search
+
+## s3_puller_daemon.py Usage:
+The purpose of `s3_puller_daemon.py` is to act as a background service that continuously monitors an AWS S3 bucket for newly processed email data. It polls a specific "index" directory for subdirectories named by UUID, tracks their download status in a local SQLite database to prevent duplicate work, and synchronizes the remote files to a local directory for further analysis.
+
+### Example Workflow Execution:
+    S3 Bucket (processed_emails/{uuid}/)
+    ↓
+    Daemon: Polls every 20 seconds
+    ↓
+    Database: Records new UUIDs as 'pending' in daemon_state.db
+    ↓
+    Process: Downloads all objects within the UUID folder to local storage
+    ↓
+    Output: Local directory structure mirroring S3 (./processed_emails/{uuid}/{files})
+
+### Database Tracking:
+The script maintains a local SQLite database (`daemon_state.db`) with a table named `discovered_folders`:
+* **uuid**: The primary key/identifier for the email folder.
+* **discovered_at**: Timestamp of when the folder was first seen in S3.
+* **downloaded_at**: Timestamp of successful completion.
+* **status**: Current state, which can be `pending`, `complete`, or `failed`.
+
+### Processing Details:
+1. **Discovery**: Lists all common prefixes (folders) under the configured S3 index directory using a paginator.
+2. **State Management**: Compares S3 folders against the local database; new folders are inserted with a `pending` status.
+3. **Reliable Download**: Attempt to download all objects under `{index_dir}/{uuid}/` into `local_root/{uuid}/`.
+4. **Resilience**: If a download fails due to S3 or OS errors, the UUID is marked as `failed` and will be retried during the next polling cycle.
+5. **Logging**: Maintains a detailed log in `s3_daemon.log` and the console, tracking discoveries, download progress, and errors.
+
+### AWS Configuration Requirements:
+* AWS credentials must be configured via `~/.aws/credentials`, environment variables, or an IAM role.
+* `boto3` and `botocore` Python packages must be installed.
+
+### Configuration Variables (Internal):
+These settings are modified directly within the script constants:
+* **S3_BUCKET**: The name of the S3 bucket to monitor (default: `"email-ingestion-raw-data"`).
+* **S3_INDEX_DIR**: The prefix directory in S3 to check for UUID folders.
+* **POLL_INTERVAL_SECONDS**: Frequency of S3 checks (default: `20`).
+* **LOCAL_DOWNLOAD_ROOT**: The local path where files will be stored (default: `./processed_emails`).
+* **DB_PATH**: Path to the SQLite state database.
+
+### CLI Execution:
+    python s3_puller_daemon.py
+*Note: This script is designed to run as a persistent process. Use `Ctrl+C` to stop the daemon manually.*
 
