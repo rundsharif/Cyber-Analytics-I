@@ -1,0 +1,295 @@
+================================================================================
+FUSION LAYER - MACHINE SETUP AND EXECUTION GUIDE
+================================================================================
+
+This document provides step-by-step instructions for deploying and running the
+fusion layer on the target machine.
+
+================================================================================
+WHAT IS THE FUSION LAYER?
+================================================================================
+
+The fusion layer is the final decision component in the multi-model cyber-threat
+analysis pipeline. It does NOT train machine learning models itself. Instead, it:
+
+1. Receives probability scores from THREE specialized models:
+   - Header model (analyzes email headers) → produces p_header
+   - Body model (analyzes email content) → produces p_body  
+   - Malware model (analyzes attachments) → produces p_malware
+
+2. Combines these scores into a single final decision using:
+   - Primary method: Logistic regression stacking (trained model)
+   - Baseline method: Soft voting (simple average)
+
+3. Produces the final output for each email:
+   - final_score (0.0 to 1.0 probability)
+   - final_label (0 = benign, 1 = malicious)
+   - risk_level (low, medium, high)
+   - models_used (which scores were available)
+   - fusion_method (soft_voting or logistic_regression_stacking)
+
+The fusion layer handles missing data gracefully. If an email has no attachment,
+the malware score will be missing, and the fusion layer adjusts accordingly.
+
+================================================================================
+STEP 1: COPY THE PROJECT TO THE TARGET MACHINE
+================================================================================
+
+Transfer the entire fusion_layer directory to the target machine. For example:
+
+    scp -r fusion_layer/ user@machine:/path/to/destination/
+
+Or use a USB drive, network share, or git clone if the repository is available.
+
+================================================================================
+STEP 2: OPEN A TERMINAL AND NAVIGATE TO THE PROJECT
+================================================================================
+
+    cd /path/to/fusion_layer
+
+================================================================================
+STEP 3: INSTALL PYTHON DEPENDENCIES
+================================================================================
+
+Option A (Recommended): Use the provided install script
+
+    bash install_dependencies.sh
+
+Option B: Manual installation
+
+    python3 -m pip install --upgrade pip
+    python3 -m pip install -r requirements.txt
+
+The required dependencies are:
+- pandas (data processing)
+- scikit-learn (logistic regression model)
+- joblib (model persistence)
+- PyYAML (configuration)
+- boto3 (optional, for S3 integration)
+- Flask (optional, for web app)
+- pytest (optional, for testing)
+
+================================================================================
+STEP 4: VERIFY THE TRAINED FUSION MODEL EXISTS
+================================================================================
+
+If you plan to use logistic_regression_stacking (the default method), confirm:
+
+    ls -lh artifacts/logistic_fusion_model.joblib
+
+This file must exist. If it does not, you have two options:
+
+Option A: Train the model locally (if you have labeled training data)
+
+    python3 train_fusion.py --input data/sample_fusion_train.csv
+
+Option B: Copy the trained model from another machine
+
+    scp user@other-machine:/path/to/logistic_fusion_model.joblib artifacts/
+
+For soft_voting only (no trained model needed), skip this step.
+
+================================================================================
+STEP 5: CONFIGURE THE THREE MODEL-OUTPUT LOCATIONS
+================================================================================
+
+Edit the configuration file:
+
+    config/fusion_config.yaml
+
+Find the integration.sources section and update the three locations:
+
+integration:
+  sources:
+    header:
+      location: /path/to/header_model_scores.csv
+    body:
+      location: /path/to/body_model_scores.csv
+    malware:
+      location: /path/to/malware_model_scores.csv
+
+These paths can be:
+- Local file paths (e.g., /data/scores/header_scores.csv)
+- S3 URIs (e.g., s3://your-bucket/scores/header_scores.csv)
+
+The fusion layer will automatically detect the format and load the files.
+
+If one of the upstream models uses different column names, you can declare
+those overrides here:
+
+integration:
+  sources:
+    header:
+      location: /path/to/header_model_scores.csv
+      email_id_column: message_id
+      score_column: header_probability
+
+================================================================================
+STEP 6: (OPTIONAL) CONFIGURE THE OUTPUT FILE LOCATION
+================================================================================
+
+By default, the fusion layer writes predictions to:
+
+    artifacts/integrated_<method>_predictions.csv
+
+To change the output location, add this to config/fusion_config.yaml:
+
+integration:
+  outputs:
+    predictions: /your/custom/output/location/predictions.csv
+
+Or use the --output flag when running (see Step 7).
+
+================================================================================
+STEP 7: RUN THE FUSION LAYER
+================================================================================
+
+Simplest command (uses all config defaults):
+
+    python3 run_integrated_fusion.py
+
+This will:
+1. Load the three model-output files from the configured locations
+2. Merge them by email_id
+3. Run the configured fusion method (default: logistic_regression_stacking)
+4. Write predictions to the configured output location
+
+To override the fusion method:
+
+    python3 run_integrated_fusion.py --fusion-method soft_voting
+
+To override the output location:
+
+    python3 run_integrated_fusion.py --output /custom/path/predictions.csv
+
+To override specific source locations for testing:
+
+    python3 run_integrated_fusion.py \
+      --header-input /test/header.csv \
+      --body-input /test/body.csv \
+      --malware-input /test/malware.csv
+
+================================================================================
+STEP 8: VERIFY THE OUTPUT FILES
+================================================================================
+
+After running, check for the prediction output:
+
+    ls -lh artifacts/
+
+You should see:
+- integrated_<method>_predictions.csv (or your custom location)
+- integrated_<method>_predictions_manifest.json (audit log)
+
+Example prediction output format:
+
+email_id,final_score,final_label,risk_level,models_used,fusion_method
+e1,0.876543,1,high,header|body|malware,logistic_regression_stacking
+e2,0.123456,0,low,header|body,logistic_regression_stacking
+e3,0.543210,1,medium,header|body|malware,logistic_regression_stacking
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: "No branch input sources were resolved"
+Solution: Verify the three source locations are set in config/fusion_config.yaml
+          under integration.sources.<model>.location
+
+Problem: "Missing artifacts.model_path in config"
+Solution: If using logistic_regression_stacking, ensure the model artifact
+          exists at artifacts/logistic_fusion_model.joblib, or train it with
+          train_fusion.py
+
+Problem: "FileNotFoundError: CSV file not found"
+Solution: Check that the configured source file paths are correct and the files
+          exist on the machine
+
+Problem: "Could not infer header email_id column"
+Solution: The upstream header model is using a non-standard column name.
+          Add an override in config/fusion_config.yaml:
+          
+          integration:
+            sources:
+              header:
+                email_id_column: your_column_name
+                score_column: your_score_column_name
+
+Problem: Import error for boto3
+Solution: boto3 is only required for S3 integration. If using local files only,
+          this error should not occur. If needed, install with:
+          pip install boto3
+
+================================================================================
+ENVIRONMENT VARIABLE OVERRIDES (OPTIONAL)
+================================================================================
+
+For quick testing or CI/CD pipelines, you can override config values using
+environment variables:
+
+Source locations:
+    export FUSION_HEADER_INPUT=/path/to/header.csv
+    export FUSION_BODY_INPUT=/path/to/body.csv
+    export FUSION_MALWARE_INPUT=/path/to/malware.csv
+
+Column name overrides:
+    export FUSION_HEADER_EMAIL_ID_COLUMN=message_id
+    export FUSION_HEADER_SCORE_COLUMN=header_probability
+
+Then run:
+    python3 run_integrated_fusion.py
+
+================================================================================
+SOURCE RESOLUTION PRIORITY
+================================================================================
+
+For each branch (header, body, malware), the fusion layer resolves the source
+location in this order:
+
+1. CLI argument (--header-input, --body-input, --malware-input)
+2. Environment variable (FUSION_HEADER_INPUT, etc.)
+3. config/fusion_config.yaml (integration.sources.<model>.location)
+
+This allows config to be the default team setup, while still supporting quick
+overrides during testing.
+
+================================================================================
+OUTPUT RESOLUTION PRIORITY
+================================================================================
+
+The fusion layer resolves the output destination in this order:
+
+1. CLI argument (--output)
+2. config/fusion_config.yaml (integration.outputs.predictions)
+3. Default: artifacts/integrated_<method>_predictions.csv
+
+================================================================================
+RUNNING TESTS (OPTIONAL)
+================================================================================
+
+To validate the installation and configuration:
+
+    pytest -q
+
+All tests should pass. If any tests fail, review the error messages for
+details about the failure.
+
+================================================================================
+ADDITIONAL NOTES
+================================================================================
+
+- The fusion layer supports both local CSV files and S3 URIs
+- Missing malware scores (for emails without attachments) are handled
+  automatically
+- The manifest JSON file records detailed statistics about each run
+- For production use, consider setting up a cron job or scheduled task to run
+  the fusion layer periodically
+
+For more detailed documentation, see:
+- README.md (full project documentation)
+- MODEL_DOCUMENTATION.md (fusion model technical details)
+- TEAM_DEMO.md (demonstration walkthrough)
+
+================================================================================
+END OF GUIDE
+================================================================================

@@ -1,0 +1,139 @@
+{
+  "coverage": {
+    "rows_missing_any_modality": 0,
+    "rows_with_all_three": 3,
+    "rows_with_body": 3,
+    "rows_with_header": 3,
+    "rows_with_malware": 3
+  },
+  "duplicate_strategies": {
+    "directory_mode": "per-email discovery"
+  },
+  "entries": [
+    {
+      "directory": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-001",
+      "email_id": "email-001",
+      "output_file": null,
+      "reason": null,
+      "scores": {
+        "p_body": 0.71,
+        "p_header": 0.82,
+        "p_malware": 0.91
+      },
+      "signature": "1776271061639297719:3",
+      "source_files": {
+        "body": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-001/body_output.json",
+        "header": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-001/header_prediction.json",
+        "malware": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-001/malware_score.json"
+      },
+      "status": "ready"
+    },
+    {
+      "directory": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-002",
+      "email_id": "email-002",
+      "output_file": null,
+      "reason": "missing required scores for models: ['body']. Parse diagnostics: {'header': None, 'body': None, 'malware': None}",
+      "scores": {
+        "p_body": null,
+        "p_header": 0.15,
+        "p_malware": null
+      },
+      "signature": "1776271061639875676:2",
+      "source_files": {
+        "body": null,
+        "header": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-002/header.json",
+        "malware": null
+      },
+      "status": "skipped_missing_required"
+    },
+    {
+      "directory": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-003",
+      "email_id": "email-003",
+      "output_file": null,
+      "reason": null,
+      "scores": {
+        "p_body": 0.59,
+        "p_header": 0.48,
+        "p_malware": 0.59
+      },
+      "signature": "1776271061640457215:2",
+      "source_files": {
+        "body": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-003/body_scores.csv",
+        "header": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-003/header_scores.csv",
+        "malware": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-003/body_scores.csv"
+      },
+      "status": "ready"
+    },
+    {
+      "directory": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-004",
+      "email_id": "email-004",
+      "output_file": null,
+      "reason": "missing required scores for models: ['body']. Parse diagnostics: {'header': None, 'body': None, 'malware': None}",
+      "scores": {
+        "p_body": null,
+        "p_header": 0.77,
+        "p_malware": null
+      },
+      "signature": "1776271061640760756:1",
+      "source_files": {
+        "body": null,
+        "header": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-004/header.json",
+        "malware": null
+      },
+      "status": "skipped_missing_required"
+    },
+    {
+      "directory": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-005",
+      "email_id": "email-005",
+      "output_file": null,
+      "reason": null,
+      "scores": {
+        "p_body": 0.44,
+        "p_header": 0.33,
+        "p_malware": 0.44
+      },
+      "signature": "1776271061641139504:2",
+      "source_files": {
+        "body": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-005/body_result.txt",
+        "header": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-005/header_prediction.txt",
+        "malware": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails/email-005/body_result.txt"
+      },
+      "status": "ready"
+    }
+  ],
+  "fusion_method": "soft_voting",
+  "incremental": true,
+  "input_mode": "processed_emails_directory",
+  "join_type": "directory_scan",
+  "label_distribution": {
+    "0": 1,
+    "1": 2
+  },
+  "no_new_data": false,
+  "output_columns": [
+    "email_id",
+    "final_score",
+    "final_label",
+    "risk_level",
+    "models_used",
+    "fusion_method"
+  ],
+  "per_email_output_filename": "test_output.json",
+  "processed_emails_root": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails",
+  "ready_email_directories": 3,
+  "required_models": [
+    "header",
+    "body"
+  ],
+  "risk_distribution": {
+    "high / malicious": 1,
+    "medium / suspicious": 2
+  },
+  "rows_scored": 3,
+  "scanned_email_directories": 5,
+  "skipped_email_directories": 2,
+  "sources": {
+    "processed_emails_root": "/private/var/folders/gg/nrhmyv3x5_j9ltl95lsw63ph0000gn/T/pytest-of-seth/pytest-6/test_run_processed_emails_fusi2/processed_emails"
+  },
+  "unchanged_email_directories": 0
+}

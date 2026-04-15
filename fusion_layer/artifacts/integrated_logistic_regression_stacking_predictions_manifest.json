@@ -1,0 +1,39 @@
+{
+  "coverage": {
+    "rows_missing_any_modality": 2,
+    "rows_with_all_three": 2,
+    "rows_with_body": 4,
+    "rows_with_header": 4,
+    "rows_with_malware": 2
+  },
+  "duplicate_strategies": {
+    "body": "error",
+    "header": "error",
+    "malware": "max"
+  },
+  "fusion_method": "logistic_regression_stacking",
+  "input_mode": "assembled_branch_scores",
+  "join_type": "outer",
+  "label_distribution": {
+    "0": 1,
+    "1": 3
+  },
+  "output_columns": [
+    "email_id",
+    "final_score",
+    "final_label",
+    "risk_level",
+    "models_used",
+    "fusion_method"
+  ],
+  "risk_distribution": {
+    "high / malicious": 1,
+    "medium / suspicious": 3
+  },
+  "rows_scored": 4,
+  "sources": {
+    "body": "data/sample_body_scores.csv",
+    "header": "data/sample_header_scores.csv",
+    "malware": "data/sample_malware_scores.csv"
+  }
+}

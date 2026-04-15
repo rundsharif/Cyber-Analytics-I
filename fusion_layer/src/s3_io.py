@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import io
+import json
 import tempfile
 from datetime import datetime
 from pathlib import Path, PurePosixPath
@@ -169,6 +170,19 @@ def write_dataframe_to_s3_csv(dataframe: pd.DataFrame, s3_uri: str, s3_client: A
         Key=location.key,
         Body=csv_payload,
         ContentType="text/csv",
+    )
+
+
+def write_json_to_s3(payload: dict[str, Any], s3_uri: str, s3_client: Any) -> None:
+    """Serialize and write a JSON payload to S3."""
+
+    location = parse_s3_uri(s3_uri)
+    json_payload = json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
+    s3_client.put_object(
+        Bucket=location.bucket,
+        Key=location.key,
+        Body=json_payload,
+        ContentType="application/json",
     )
 
 

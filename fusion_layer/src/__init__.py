@@ -3,6 +3,8 @@
 __all__ = [
     "contracts",
     "inference",
+    "integration",
+    "processed_emails_integration",
     "lambda_handler",
     "loaders",
     "logistic_fusion",

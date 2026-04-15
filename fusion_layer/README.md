@@ -231,6 +231,180 @@ python3 run_inference.py   --input data/sample_fusion_inference.csv   --fusion-m
 
 ---
 
+## Integration-ready branch assembly
+
+To make the fusion layer easier to plug into the full live pipeline, the project now includes an
+**integration-oriented assembly path** for cases where the header, body, and malware models
+produce separate outputs.
+
+### What this solves
+
+In the live system, your DAC workstation or orchestration layer may receive three separate score
+sources:
+
+- header model scores
+- body model scores
+- malware / attachment model scores
+
+Those sources may not use identical column names, and attachment outputs may contain multiple
+rows per `email_id`. The integration path now handles that for you by:
+
+- normalizing score column aliases automatically
+- normalizing email ID column aliases automatically
+- merging all branches into the canonical fusion input contract
+- handling duplicate malware rows using configurable strategies
+- writing a manifest JSON with coverage and output statistics
+
+### Canonical fusion input after assembly
+
+Regardless of upstream naming, the assembly step produces:
+
+```csv
+email_id,p_header,p_body,p_malware
+```
+
+### New integration CLI
+
+Use:
+
+```bash
+python3 run_integrated_fusion.py \
+  --header-input data/sample_header_scores.csv \
+  --body-input data/sample_body_scores.csv \
+  --malware-input data/sample_malware_scores.csv \
+  --fusion-method soft_voting \
+  --assembled-input-output artifacts/assembled_fusion_input.csv \
+  --manifest-output artifacts/integrated_soft_voting_manifest.json \
+  --output artifacts/integrated_soft_voting_predictions.csv
+```
+
+### Simplest final hookup for your team
+
+If you do **not** want teammates to keep passing all three paths manually, the fusion layer now supports a
+**config-first connection model**.
+
+Set the three model-output locations once in `config/fusion_config.yaml`:
+
+```yaml
+integration:
+  sources:
+    header:
+      location: s3://your-bucket/path/to/header_scores.csv
+    body:
+      location: s3://your-bucket/path/to/body_scores.csv
+    malware:
+      location: s3://your-bucket/path/to/malware_scores.csv
+```
+
+Then run:
+
+```bash
+python3 run_integrated_fusion.py
+```
+
+That is the intended **final connection-ready workflow**: once the upstream teams tell you where each model stores
+its scores, you only need to update those three locations.
+
+### Source resolution priority
+
+For each of the three model branches, the integration runner resolves source locations in this order:
+
+1. CLI argument
+2. environment variable
+3. `config/fusion_config.yaml`
+
+This means you can use config as the default team setup, while still allowing quick overrides during testing.
+
+Environment variable overrides:
+
+- `FUSION_HEADER_INPUT`
+- `FUSION_BODY_INPUT`
+- `FUSION_MALWARE_INPUT`
+
+Optional column override environment variables:
+
+- `FUSION_HEADER_EMAIL_ID_COLUMN`
+- `FUSION_BODY_EMAIL_ID_COLUMN`
+- `FUSION_MALWARE_EMAIL_ID_COLUMN`
+- `FUSION_HEADER_SCORE_COLUMN`
+- `FUSION_BODY_SCORE_COLUMN`
+- `FUSION_MALWARE_SCORE_COLUMN`
+
+### Config-based column overrides
+
+If one of the model teams uses nonstandard column names, you can declare that once in config too:
+
+```yaml
+integration:
+  sources:
+    header:
+      location: s3://your-bucket/path/to/header_scores.csv
+      email_id_column: message_id
+      score_column: header_probability
+```
+
+This keeps the final hookup simple even if the three specialized models do not export identical schemas.
+
+This will:
+
+1. load the three branch score files,
+2. infer score columns where possible,
+3. merge them by `email_id`,
+4. run the selected fusion method,
+5. write predictions,
+6. optionally save the assembled input and manifest.
+
+### Supported branch-score alias inference
+
+Examples of accepted score columns include:
+
+- header: `p_header`, `header_score`, `header_probability`, `score`
+- body: `p_body`, `body_score`, `body_probability`, `score`
+- malware: `p_malware`, `p_attachment`, `malware_score`, `attachment_score`, `score`
+
+Examples of accepted ID columns include:
+
+- `email_id`
+- `message_id`
+- `id`
+
+### Duplicate handling
+
+This is especially important for attachments, where multiple artifacts may map to one email.
+
+Supported duplicate strategies:
+
+- `error`
+- `first`
+- `max`
+- `mean`
+- `min`
+
+Default behavior:
+
+- header: `error`
+- body: `error`
+- malware: `max`
+
+These defaults are configurable in `config/fusion_config.yaml` under `integration`.
+
+### Integration manifest
+
+The manifest JSON records:
+
+- fusion method used
+- join type
+- source locations
+- duplicate strategies
+- rows scored
+- coverage by modality
+- label distribution
+- risk distribution
+
+This makes it easier to debug live integration and confirm that all branches are contributing as expected.
+
+---
+
 ## Lambda + S3 runtime integration
 
 The fusion layer now includes a cloud runtime handler for **S3-driven inference**:

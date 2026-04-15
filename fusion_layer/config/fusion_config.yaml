@@ -20,3 +20,37 @@ logistic_regression:
   solver: liblinear
   max_iter: 1000
   random_state: 42
+
+integration:
+  join_type: outer
+  # Optional: configure default output file locations
+  # outputs:
+  #   predictions: /path/to/custom/predictions.csv
+  #   assembled_input: /path/to/custom/assembled_input.csv
+  #   manifest: /path/to/custom/manifest.json
+  sources:
+    header:
+      location: data/sample_header_scores.csv
+      # Optional override if the upstream header model uses a different ID column name.
+      # email_id_column: message_id
+      # Optional override if the upstream header model uses a different score column name.
+      # score_column: header_probability
+    body:
+      location: data/sample_body_scores.csv
+      # email_id_column: email_id
+      # score_column: body_score
+    malware:
+      location: data/sample_malware_scores.csv
+      # email_id_column: email_id
+      # score_column: attachment_score
+  duplicate_strategy:
+    header: error
+    body: error
+    malware: max
+  processed_emails:
+    incremental: true
+    state_path: artifacts/processed_emails_state.json
+    required_models:
+      - header
+      - body
+    per_email_output_filename: fusion_output.json
