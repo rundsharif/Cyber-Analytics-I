@@ -1,0 +1,14 @@
+{
+  "email_id": "5b297a3f-a732-4aff-976b-d2b8af69c610",
+  "final_label": 1,
+  "final_score": 0.6279333201453288,
+  "fusion_method": "logistic_regression_stacking",
+  "generated_at": "2026-04-20T16:27:07.083963+00:00",
+  "models_used": "header|body",
+  "risk_level": "medium / suspicious",
+  "source_files": {
+    "body": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/5b297a3f-a732-4aff-976b-d2b8af69c610/body.json",
+    "header": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/5b297a3f-a732-4aff-976b-d2b8af69c610/header.json",
+    "malware": null
+  }
+}

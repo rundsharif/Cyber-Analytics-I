@@ -1,0 +1,40 @@
+{
+  "processed_emails": {
+    "5b297a3f-a732-4aff-976b-d2b8af69c610": {
+      "directory": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/5b297a3f-a732-4aff-976b-d2b8af69c610",
+      "output_file": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/5b297a3f-a732-4aff-976b-d2b8af69c610/fusion_output.json",
+      "reason": null,
+      "scores": {
+        "p_body": 0.77,
+        "p_header": 0.88,
+        "p_malware": null
+      },
+      "signature": "1776702417293641573:3",
+      "source_files": {
+        "body": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/5b297a3f-a732-4aff-976b-d2b8af69c610/body.json",
+        "header": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/5b297a3f-a732-4aff-976b-d2b8af69c610/header.json",
+        "malware": null
+      },
+      "status": "processed",
+      "updated_at": "2026-04-20T16:27:07.086272+00:00"
+    },
+    "7c9e6679-7425-40de-944b-e07fc1f90ae7": {
+      "directory": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "output_file": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/7c9e6679-7425-40de-944b-e07fc1f90ae7/fusion_output.json",
+      "reason": null,
+      "scores": {
+        "p_body": 0.2,
+        "p_header": 0.14,
+        "p_malware": null
+      },
+      "signature": "1776702425793550085:2",
+      "source_files": {
+        "body": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/7c9e6679-7425-40de-944b-e07fc1f90ae7/body.json",
+        "header": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/7c9e6679-7425-40de-944b-e07fc1f90ae7/header.json",
+        "malware": null
+      },
+      "status": "processed",
+      "updated_at": "2026-04-20T16:27:07.086272+00:00"
+    }
+  }
+}

@@ -1,5 +1,0 @@
-email_id,final_score,final_label,risk_level,models_used,fusion_method
-i1,0.8533333333333334,1,high / malicious,header|body|malware,soft_voting
-i2,0.17,0,low / benign,header|body,soft_voting
-i3,0.39666666666666667,0,medium / suspicious,header|body|malware,soft_voting
-i4,0.53,1,medium / suspicious,header|body,soft_voting

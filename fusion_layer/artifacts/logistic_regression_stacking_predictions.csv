@@ -1,5 +1,0 @@
-email_id,final_score,final_label,risk_level,models_used,fusion_method
-i1,0.7326851896509923,1,high / malicious,header|body|malware,logistic_regression_stacking
-i2,0.3721840110968995,0,medium / suspicious,header|body,logistic_regression_stacking
-i3,0.5587085164979801,1,medium / suspicious,header|body|malware,logistic_regression_stacking
-i4,0.5164826799861856,1,medium / suspicious,header|body,logistic_regression_stacking
