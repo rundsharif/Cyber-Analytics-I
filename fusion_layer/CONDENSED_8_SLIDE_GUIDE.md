@@ -57,7 +57,7 @@ Final Score = sigmoid(w₁×header + w₂×body + w₃×malware + ...)
 **Learned weights from data:**
 - Header: **0.881** (highest influence)
 - Body: 0.692
-- Malware: 0.377
+- Malware: 0.376
 
 **Why better:** Adapts to which models are actually more accurate
 
@@ -106,13 +106,14 @@ Features = [0.88, 0.77, 0.50, 1, 1, 0, 2]
 
 **Step 3: Apply Learned Weights**
 ```
-logit = 0.881×0.88 + 0.692×0.77 + 0.377×0.50 + ... = 0.372
-score = sigmoid(0.372) = 0.592
+logit = 0.881×0.88 + 0.692×0.77 + 0.376×0.50 + (-0.261×1) + (-0.261×1) + (0.426×0) + (-0.095×2) - 0.261
+logit ≈ 0.528
+score = sigmoid(0.528) = 0.628
 ```
 
 **Step 4: Output**
 ```
-final_score: 0.592
+final_score: 0.628
 final_label: 1 (MALICIOUS - above 0.5 threshold)
 risk_level: "medium" (0.3-0.7 range)
 ```
@@ -130,7 +131,7 @@ Feature Importance (Coefficient Values):
 ══════════════════════════════════════════
 Header Score    ████████████████████  0.881
 Body Score      ██████████████        0.692
-Malware Score   ████████              0.377
+Malware Score   ████████              0.376
 has_malware     ██████                0.426
 has_header      ███                  -0.261
 has_body        ███                  -0.261
