@@ -16,7 +16,7 @@
         "malware": null
       },
       "status": "processed",
-      "updated_at": "2026-04-20T16:27:07.086272+00:00"
+      "updated_at": "2026-04-29T14:16:18.378374+00:00"
     },
     "7c9e6679-7425-40de-944b-e07fc1f90ae7": {
       "directory": "/Users/seth/Projects/Capstone1/Cyber-Analytics-I/fusion_layer/data/example_emails_by_uuid/7c9e6679-7425-40de-944b-e07fc1f90ae7",
@@ -34,7 +34,7 @@
         "malware": null
       },
       "status": "processed",
-      "updated_at": "2026-04-20T16:27:07.086272+00:00"
+      "updated_at": "2026-04-29T14:16:18.378374+00:00"
     }
   }
 }
